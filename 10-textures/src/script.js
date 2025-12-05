@@ -35,20 +35,16 @@ const loadingManager = new THREE.LoadingManager();
 //         console.log('error')
 //     }
 // );
-loadingManager.onStart = () =>
-{
+loadingManager.onStart = () => {
     console.log('start')
 }
-loadingManager.onLoad = () =>
-{
+loadingManager.onLoad = () => {
     console.log('loaded')
 }
-loadingManager.onProgress = () =>
-{
+loadingManager.onProgress = () => {
     console.log('progress')
 }
-loadingManager.onError = () =>
-{
+loadingManager.onError = () => {
     console.log('error')
 }
 const textureLoader = new THREE.TextureLoader(loadingManager);
@@ -59,13 +55,26 @@ const normalTexture = textureLoader.load('/textures/door/normal.jpg');
 const ambientOcclusionTexture = textureLoader.load('/textures/door/ambientOcclusion.jpg');
 const metalnessTexture = textureLoader.load('/textures/door/metalness.jpg');
 const roughnessTexture = textureLoader.load('/textures/door/roughness.jpg');
+
 colorTexture.colorSpace = THREE.SRGBColorSpace;
-alphaTexture.colorSpace = THREE.SRGBColorSpace;
-heightTexture.colorSpace = THREE.SRGBColorSpace;
-normalTexture.colorSpace = THREE.SRGBColorSpace;
-ambientOcclusionTexture.colorSpace = THREE.SRGBColorSpace;
-metalnessTexture.colorSpace = THREE.SRGBColorSpace;
-roughnessTexture.colorSpace = THREE.SRGBColorSpace;
+
+// colorTexture.repeat.x = 2;
+// colorTexture.repeat.y = 3;
+// colorTexture.wrapS = THREE.RepeatWrapping;
+// colorTexture.wrapT = THREE.MirroredRepeatWrapping;
+
+// colorTexture.offset.x = 0.5;
+// colorTexture.offset.y = 0.5;
+
+// colorTexture.rotation = Math.PI * 0.25;
+// colorTexture.center.x = 0.5;
+// colorTexture.center.y = 0.5;
+
+colorTexture.generateMipmaps = false;
+colorTexture.minFilter = THREE.NearestFilter;
+colorTexture.magFilter = THREE.NearestFilter;
+
+
 
 /**
  * Base
@@ -93,8 +102,7 @@ const sizes = {
     height: window.innerHeight
 }
 
-window.addEventListener('resize', () =>
-{
+window.addEventListener('resize', () => {
     // Update sizes
     sizes.width = window.innerWidth
     sizes.height = window.innerHeight
@@ -136,8 +144,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 
-const tick = () =>
-{
+const tick = () => {
     const elapsedTime = clock.getElapsedTime()
 
     // Update controls
