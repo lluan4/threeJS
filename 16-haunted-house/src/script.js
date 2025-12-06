@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { Timer } from 'three/addons/misc/Timer.js'
 import GUI from 'lil-gui'
 
+
+
 /**
  * Base
  */
@@ -14,6 +16,17 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+
+/**
+ * Textures
+*/
+const textureLoader = new THREE.TextureLoader()
+
+//Floor
+const floorBasePath = ["floor", "coast_sand_rocks_02_1k"]
+const floorPathsNames = ["alpha"]
+
+const floorAlphaTextures = textureLoader.load(`./floor)}/${floorPathsNames[0]}.jpg`)
 
 /**
  * House
@@ -56,9 +69,21 @@ door.position.y += houseMeasurements.height / 2.3
 door.position.z += (houseMeasurements.depth / 2) + 0.01
 house.add(door)
 
+/**
+ * Floor
+*/
+const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(20, 20),
+    new THREE.MeshStandardMaterial({
+        alphaMap: floorAlphaTextures[0],
+        transparent: true
+    })
+)
+floor.rotation.x = -Math.PI * 0.5
+
+scene.add(floor)
+
 // Bushes
-
-
 const bushGeometry = new THREE.SphereGeometry(1, 16, 16)
 const bushMaterial = new THREE.MeshStandardMaterial({
     color: '#89c853'
@@ -103,31 +128,55 @@ const graveMaterial = new THREE.MeshStandardMaterial({
     color: '#b2b6b1'
 })
 
+const gravePositions = []
+const minDistance = 0.8
+
 for (let i = 0; i < 50; i++) {
-    const grave = new THREE.Mesh(
-        graveGeometry,
-        graveMaterial
-    )
-    grave.position.x = (Math.random() - 0.5) * 10
-    grave.position.z = (Math.random() - 0.5) * 10
-    grave.position.y = 0.4
-    grave.rotation.z = (Math.random() - 0.5) * 0.4
-    grave.rotation.y = (Math.random() - 0.5) * 0.4
+    let x = 0
+    let z = 0
+    let isValidPosition = false
+    let tries = 0
+    const maxTries = 50
+
+    while (!isValidPosition && tries < maxTries) {
+        tries++
+
+        const angle = Math.random() * Math.PI * 2
+        const radius = 3.5 + Math.random() * 4
+
+        x = Math.sin(angle) * radius
+        z = Math.cos(angle) * radius
+
+        isValidPosition = true
+        for (const pos of gravePositions) {
+            const dx = x - pos.x
+            const dz = z - pos.z
+            const distSq = dx * dx + dz * dz
+
+            if (distSq < minDistance * minDistance) {
+                isValidPosition = false
+                break
+            }
+        }
+    }
+
+    if (!isValidPosition) continue
+
+    gravePositions.push({ x, z })
+
+    const grave = new THREE.Mesh(graveGeometry, graveMaterial)
+
+    const y = Math.random() * 0.4
+    const rotationY = (Math.random() - 0.5) * 0.4
+    const rotationX = (Math.random() - 0.5) * 0.4
+    const rotationZ = (Math.random() - 0.5) * 0.4
+
+    grave.position.set(x, y, z)
+    grave.rotation.set(rotationX, rotationY, rotationZ)
+
     graves.add(grave)
 }
 
-
-
-/**
- * Floor
-*/
-const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(20, 20),
-    new THREE.MeshStandardMaterial()
-)
-floor.rotation.x = -Math.PI * 0.5
-
-scene.add(floor)
 
 /**
  * Lights
