@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import GUI from "lil-gui";
+import gsap from "gsap";
 
 /**
  * Debug
@@ -8,12 +9,71 @@ const gui = new GUI();
 
 const parameters = {
   materialColor: "#ffeded",
+  scale: 1,
+  positions: 2,
+  objectsDistance: 4,
 };
 
 gui.addColor(parameters, "materialColor").onChange(() => {
   material.color.set(parameters.materialColor);
+  particlesMaterial.color.set(parameters.materialColor);
 });
 
+gui
+  .add(parameters, "scale")
+  .min(0.1)
+  .max(3)
+  .step(0.1)
+  .onChange(() => {
+    mesh1.scale.set(parameters.scale, parameters.scale, parameters.scale);
+    mesh2.scale.set(parameters.scale, parameters.scale, parameters.scale);
+    mesh3.scale.set(parameters.scale, parameters.scale, parameters.scale);
+  });
+
+gui
+  .add(parameters, "positions")
+  .min(0.1)
+  .max(5)
+  .step(0.1)
+  .onChange(() => {
+    mesh1.position.x = parameters.positions;
+    mesh2.position.x = -1 * parameters.positions;
+    mesh3.position.x = parameters.positions;
+  });
+
+gui
+  .add(parameters, "objectsDistance")
+  .min(1)
+  .max(10)
+  .step(0.1)
+  .onChange(() => {
+    mesh1.position.y = parameters.objectsDistance * 0;
+    mesh2.position.y = -parameters.objectsDistance * 1;
+    mesh3.position.y = parameters.objectsDistance * 2;
+  });
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth <= 768) {
+    const objectsDistance = parameters.objectsDistance + 2;
+    const scale = Math.round(window.innerWidth / 1066);
+
+    mesh1.position.x = 0;
+    mesh2.position.x = 0;
+    mesh3.position.x = 0;
+
+    mesh1.scale.set(scale, scale, scale);
+    mesh2.scale.set(0.3, 0.3, 0.3);
+    mesh3.scale.set(0.3, 0.3, 0.3);
+  } else {
+    mesh1.position.x = parameters.positions;
+    mesh2.position.x = -1 * parameters.positions;
+    mesh3.position.x = parameters.positions;
+
+    mesh1.scale.set(parameters.scale, parameters.scale, parameters.scale);
+    mesh2.scale.set(parameters.scale, parameters.scale, parameters.scale);
+    mesh3.scale.set(parameters.scale, parameters.scale, parameters.scale);
+  }
+});
 /**
  * Texture
  */
@@ -42,7 +102,7 @@ const material = new THREE.MeshToonMaterial({
 });
 
 //Meshes
-const objectsDistance = 4;
+const objectsDistance = parameters.objectsDistance;
 const mesh1 = new THREE.Mesh(new THREE.TorusGeometry(1, 0.4, 16, 60), material);
 const mesh2 = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 32), material);
 const mesh3 = new THREE.Mesh(
@@ -54,9 +114,13 @@ mesh1.position.y = -objectsDistance * 0;
 mesh2.position.y = -objectsDistance * 1;
 mesh3.position.y = -objectsDistance * 2;
 
-mesh1.position.x = 2;
-mesh2.position.x = -2;
-mesh3.position.x = 2;
+mesh1.position.x = parameters.positions;
+mesh2.position.x = -1 * parameters.positions;
+mesh3.position.x = parameters.positions;
+
+mesh1.scale.set(parameters.scale, parameters.scale, parameters.scale);
+mesh2.scale.set(parameters.scale, parameters.scale, parameters.scale);
+mesh3.scale.set(parameters.scale, parameters.scale, parameters.scale);
 
 scene.add(mesh1, mesh2, mesh3);
 
@@ -131,8 +195,22 @@ scene.add(cameraGroup);
 
 // Scroll
 let scrollY = window.scrollY;
+let currentSection = 0;
+
 window.addEventListener("scroll", () => {
   scrollY = window.scrollY;
+
+  const newSection = Math.round(scrollY / sizes.height);
+  if (newSection != currentSection) {
+    currentSection = newSection;
+    gsap.to(sectionMeshes[currentSection].rotation, {
+      duration: 1.5,
+      ease: "power2.inOut",
+      x: "+=6",
+      y: "+=3",
+      z: "+=1.5",
+    });
+  }
 });
 
 /**
@@ -192,8 +270,8 @@ const tick = () => {
     (parallaxY - cameraGroup.position.y) * 2 * deltaTime;
 
   for (const mesh of sectionMeshes) {
-    mesh.rotation.x = elapsedTime * 0.1;
-    mesh.rotation.y = elapsedTime * 0.12;
+    mesh.rotation.x += deltaTime * 0.1;
+    mesh.rotation.y += deltaTime * 0.12;
   }
 
   // Call tick again on the next frame
