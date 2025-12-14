@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { Sky } from "three/addons/objects/Sky.js";
 import GUI from "lil-gui";
 import gsap from "gsap";
 
@@ -97,6 +98,7 @@ const createFirework = (count, position, size, texture, radius, color) => {
   //Geometry
   const positionArray = new Float32Array(count * 3);
   const sizesArray = new Float32Array(count);
+  const timeMultipliersArray = new Float32Array(count);
 
   for (let i = 0; i < count * 3; i++) {
     const i3 = i * 3;
@@ -113,6 +115,7 @@ const createFirework = (count, position, size, texture, radius, color) => {
     positionArray[i3 + 2] = position.z;
 
     sizesArray[i] = Math.random();
+    timeMultipliersArray[i] = 1 + Math.random();
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -123,6 +126,10 @@ const createFirework = (count, position, size, texture, radius, color) => {
   geometry.setAttribute(
     "aSize",
     new THREE.Float32BufferAttribute(sizesArray, 1)
+  );
+  geometry.setAttribute(
+    "aTimeMultiplier",
+    new THREE.Float32BufferAttribute(timeMultipliersArray, 1)
   );
 
   //Material
@@ -161,16 +168,88 @@ const createFirework = (count, position, size, texture, radius, color) => {
   });
 };
 
-window.addEventListener("click", () => {
-  createFirework(
-    100,
-    new THREE.Vector3(),
-    0.5,
-    texture[7],
-    1,
-    new THREE.Color("#8affff")
+const createRandomFirework = () => {
+  const count = Math.round(400 + Math.random() * 5000);
+  const position = new THREE.Vector3(
+    (Math.random() - 0.5) * 2,
+    Math.random(),
+    (Math.random() - 0.5) * 2
   );
+  const size = 0.2 + Math.random() * 0.8;
+  const textureIndex = Math.floor(Math.random() * texture.length);
+  const radius = 0.5 + Math.random() * 2;
+  const color = new THREE.Color(
+    `hsl(${Math.floor(Math.random() * 360)},100%,50%)`
+  );
+  createFirework(count, position, size, texture[textureIndex], radius, color);
+};
+
+window.addEventListener("click", () => {
+  // createFirework(
+  //   100,
+  //   new THREE.Vector3(),
+  //   0.5,
+  //   texture[7],
+  //   1,
+  //   new THREE.Color("#8affff")
+  // );
+
+  createRandomFirework();
 });
+
+/**
+ * Sky
+ */
+
+// Add Sky
+const sky = new Sky();
+sky.scale.setScalar(450000);
+scene.add(sky);
+
+const sun = new THREE.Vector3();
+/// GUI
+
+const effectController = {
+  turbidity: 10,
+  rayleigh: 3,
+  mieCoefficient: 0.005,
+  mieDirectionalG: 0.7,
+  elevation: -2.2,
+  azimuth: 180,
+  exposure: renderer.toneMappingExposure,
+};
+
+function guiChanged() {
+  const uniforms = sky.material.uniforms;
+  uniforms["turbidity"].value = effectController.turbidity;
+  uniforms["rayleigh"].value = effectController.rayleigh;
+  uniforms["mieCoefficient"].value = effectController.mieCoefficient;
+  uniforms["mieDirectionalG"].value = effectController.mieDirectionalG;
+
+  const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
+  const theta = THREE.MathUtils.degToRad(effectController.azimuth);
+
+  sun.setFromSphericalCoords(1, phi, theta);
+
+  uniforms["sunPosition"].value.copy(sun);
+
+  renderer.toneMappingExposure = effectController.exposure;
+  renderer.render(scene, camera);
+}
+
+gui.add(effectController, "turbidity", 0.0, 20.0, 0.1).onChange(guiChanged);
+gui.add(effectController, "rayleigh", 0.0, 4, 0.001).onChange(guiChanged);
+gui
+  .add(effectController, "mieCoefficient", 0.0, 0.1, 0.001)
+  .onChange(guiChanged);
+gui
+  .add(effectController, "mieDirectionalG", 0.0, 1, 0.001)
+  .onChange(guiChanged);
+gui.add(effectController, "elevation", 0, 90, 0.1).onChange(guiChanged);
+gui.add(effectController, "azimuth", -180, 180, 0.1).onChange(guiChanged);
+gui.add(effectController, "exposure", 0, 1, 0.0001).onChange(guiChanged);
+
+guiChanged();
 
 /**
  * Animate
