@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import GUI from "lil-gui";
+import gsap from "gsap";
 
 import fireworkVertexShader from "./shaders/firework/vertex.glsl";
 import fireworkFragmentShader from "./shaders/firework/fragment.glsl";
@@ -92,16 +93,26 @@ const texture = [
   textureLoader.load("8.png"),
 ];
 
-const createFirework = (count, position, size, texture) => {
+const createFirework = (count, position, size, texture, radius, color) => {
   //Geometry
   const positionArray = new Float32Array(count * 3);
+  const sizesArray = new Float32Array(count);
 
   for (let i = 0; i < count * 3; i++) {
     const i3 = i * 3;
 
-    positionArray[i3 + 0] = Math.random() - 0.5;
-    positionArray[i3 + 1] = Math.random() - 0.5;
-    positionArray[i3 + 2] = Math.random() - 0.5;
+    const spherical = new THREE.Spherical(
+      radius * (0.75 + Math.random() * 0.25),
+      Math.random() * Math.PI,
+      Math.random() * Math.PI * 2
+    );
+    const position = new THREE.Vector3().setFromSpherical(spherical);
+
+    positionArray[i3 + 0] = position.x;
+    positionArray[i3 + 1] = position.y;
+    positionArray[i3 + 2] = position.z;
+
+    sizesArray[i] = Math.random();
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -109,8 +120,13 @@ const createFirework = (count, position, size, texture) => {
     "position",
     new THREE.Float32BufferAttribute(positionArray, 3)
   );
+  geometry.setAttribute(
+    "aSize",
+    new THREE.Float32BufferAttribute(sizesArray, 1)
+  );
 
   //Material
+  texture.flipY = false;
   const material = new THREE.ShaderMaterial({
     vertexShader: fireworkVertexShader,
     fragmentShader: fireworkFragmentShader,
@@ -122,6 +138,8 @@ const createFirework = (count, position, size, texture) => {
       uResolution: new THREE.Uniform(sizes.resolution),
       uPixelRatio: new THREE.Uniform(sizes.pixelRatio),
       uTexture: new THREE.Uniform(texture),
+      uColor: new THREE.Uniform(color),
+      uProgress: new THREE.Uniform(0),
     },
   });
 
@@ -129,9 +147,30 @@ const createFirework = (count, position, size, texture) => {
   const fireworks = new THREE.Points(geometry, material);
   fireworks.position.copy(position);
   scene.add(fireworks);
+
+  // Animate
+  gsap.to(material.uniforms.uProgress, {
+    value: 1,
+    duration: 3,
+    ease: "linear",
+    onComplete: () => {
+      scene.remove(fireworks);
+      geometry.dispose();
+      material.dispose();
+    },
+  });
 };
 
-createFirework(1000, new THREE.Vector3(), 0.5, texture[7]);
+window.addEventListener("click", () => {
+  createFirework(
+    100,
+    new THREE.Vector3(),
+    0.5,
+    texture[7],
+    1,
+    new THREE.Color("#8affff")
+  );
+});
 
 /**
  * Animate
