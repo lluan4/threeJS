@@ -1,3 +1,9 @@
-vec3 ambientLight(vec3 lightColor, float lightIntensity){
-    return lightColor * lightIntensity;
+struct AmbientLight {
+    vec3 lightColor;
+    float lightIntensity;
+};
+
+
+vec3 ambientLight(AmbientLight ambLight){
+    return ambLight.lightColor * ambLight.lightIntensity;
 }
