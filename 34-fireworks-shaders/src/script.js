@@ -136,6 +136,7 @@ const createFirework = (count, position, size, texture, radius, color) => {
   }
 
   const geometry = new THREE.BufferGeometry();
+  geometry.setIndex(null);
   geometry.setAttribute(
     "position",
     new THREE.Float32BufferAttribute(positionArray, 3)
@@ -202,7 +203,7 @@ const createFirework = (count, position, size, texture, radius, color) => {
 };
 
 const createRandomFirework = () => {
-  const count = Math.round(400 + Math.random() * 5000);
+  const count = Math.round(400 + Math.random() * 2500);
   const position = new THREE.Vector3(
     (Math.random() - 0.5) * 2,
     Math.random(),
