@@ -1,10 +1,13 @@
-uniform sampler2D uTexture;
+
 uniform vec3 uColor;
 
 void main(){
-    float textureAlpha = texture(uTexture, gl_PointCoord).r;
+    vec2 uv = gl_PointCoord;
+    float distanceToCenter = length(uv - vec2(0.5));
+    float alpha =(0.05 / distanceToCenter) - 0.1;
 
-    gl_FragColor = vec4(uColor, textureAlpha);
+
+     gl_FragColor = vec4(uColor, alpha);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
 }

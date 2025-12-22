@@ -7,6 +7,10 @@ import gsap from "gsap";
 import fireworkVertexShader from "./shaders/firework/vertex.glsl";
 import fireworkFragmentShader from "./shaders/firework/fragment.glsl";
 
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { AfterimagePass } from "three/addons/postprocessing/AfterimagePass.js";
+
 /**
  * Base
  */
@@ -41,7 +45,9 @@ window.addEventListener("resize", () => {
   sizes.width = window.innerWidth;
   sizes.height = window.innerHeight;
   sizes.pixelRatio = Math.min(window.devicePixelRatio, 2);
-  sizes.resolution.set(sizes.width, sizes.height);
+  sizes.resolution
+    .set(sizes.width, sizes.height)
+    .multiplyScalar(sizes.pixelRatio);
 
   // Update camera
   camera.aspect = sizes.width / sizes.height;
@@ -50,6 +56,9 @@ window.addEventListener("resize", () => {
   // Update renderer
   renderer.setSize(sizes.width, sizes.height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  composer.setSize(sizes.width, sizes.height);
+  composer.setPixelRatio(sizes.pixelRatio);
 });
 
 /**
@@ -78,6 +87,14 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(sizes.pixelRatio);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const afterimagePass = new AfterimagePass();
+afterimagePass.uniforms.damp.value = 0.92;
+
+composer.addPass(afterimagePass);
 
 /**
  * Fireworks
@@ -133,6 +150,22 @@ const createFirework = (count, position, size, texture, radius, color) => {
   );
 
   //Material
+  // texture.flipY = false;
+  // const material = new THREE.ShaderMaterial({
+  //   vertexShader: fireworkVertexShader,
+  //   fragmentShader: fireworkFragmentShader,
+  //   transparent: true,
+  //   depthWrite: false,
+  //   blending: THREE.AdditiveBlending,
+  //   uniforms: {
+  //     uSize: new THREE.Uniform(size),
+  //     uResolution: new THREE.Uniform(sizes.resolution),
+  //     uPixelRatio: new THREE.Uniform(sizes.pixelRatio),
+  //     uTexture: new THREE.Uniform(texture),
+  //     uColor: new THREE.Uniform(color),
+  //     uProgress: new THREE.Uniform(0),
+  //   },
+  // });
   texture.flipY = false;
   const material = new THREE.ShaderMaterial({
     vertexShader: fireworkVertexShader,
@@ -144,7 +177,7 @@ const createFirework = (count, position, size, texture, radius, color) => {
       uSize: new THREE.Uniform(size),
       uResolution: new THREE.Uniform(sizes.resolution),
       uPixelRatio: new THREE.Uniform(sizes.pixelRatio),
-      uTexture: new THREE.Uniform(texture),
+      // uTexture: new THREE.Uniform(texture),
       uColor: new THREE.Uniform(color),
       uProgress: new THREE.Uniform(0),
     },
@@ -259,7 +292,7 @@ const tick = () => {
   controls.update();
 
   // Render
-  renderer.render(scene, camera);
+  composer.render();
 
   // Call tick again on the next frame
   window.requestAnimationFrame(tick);
