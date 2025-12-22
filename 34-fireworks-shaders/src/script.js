@@ -92,7 +92,7 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 
 const afterimagePass = new AfterimagePass();
-afterimagePass.uniforms.damp.value = 0.92;
+afterimagePass.uniforms.damp.value = 0.97;
 
 composer.addPass(afterimagePass);
 
@@ -136,7 +136,7 @@ const createFirework = (count, position, size, texture, radius, color) => {
   }
 
   const geometry = new THREE.BufferGeometry();
-  geometry.setIndex(null);
+
   geometry.setAttribute(
     "position",
     new THREE.Float32BufferAttribute(positionArray, 3)
