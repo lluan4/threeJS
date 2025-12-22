@@ -17,6 +17,10 @@ const canvas = document.querySelector("canvas.webgl");
 // Scene
 const scene = new THREE.Scene();
 
+const axesHelper = new THREE.AxesHelper();
+axesHelper.position.y += 0.25;
+scene.add(axesHelper);
+
 /**
  * Water
  */
@@ -56,6 +60,8 @@ const waterMaterial = new THREE.ShaderMaterial({
     uColorMultiplier: { value: 1 },
   },
 });
+waterGeometry.deleteAttribute("normal");
+waterGeometry.deleteAttribute("uv");
 
 gui
   .add(waterMaterial.uniforms.uBigWavesElevation, "value")
