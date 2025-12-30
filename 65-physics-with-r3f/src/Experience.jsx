@@ -13,7 +13,7 @@ import React from "react";
 import * as THREE from "three";
 
 export default function Experience() {
-  const cubesCount = 3000;
+  const cubesCount = 300;
   const model = useGLTF("./hamburger.glb");
 
   const [hitSound] = React.useState(() => new Audio("./hit.mp3"));
